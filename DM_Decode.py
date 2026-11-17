@@ -40,7 +40,7 @@ threshold, formats = zxingcpp.BarcodeFormat.DataMatrix))
 #zxing decodes the data matrix barcodes in C++ and saves results as an array
 
 color = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
-#convert the grayscaled image back to color to draw the red boxes
+#convert the grayscale image back to color to draw the red boxes
 
 #=============code location, numbering and boxing====================
 
@@ -71,6 +71,12 @@ GAP = 50
 ordered = []
 #new array for the ordered codes
 
+row_num = 0
+#for counting the amount of rows
+
+cols = 0
+#for counting number of columns
+
 while codes:
     top = min(c[1] for c in codes)
     #finds the top most y value
@@ -81,12 +87,27 @@ while codes:
     row.sort(key=lambda c: c[0])
     #sorts list lowest x first
 
+    cols = max(cols, len(row))
+    #find the biggest row and count the codes in that row to get columns
+
     ordered += row
     #save to the new list
 
     codes = [c for c in codes if c not in row]
     #remove them from the old list
     #so that when it loops the newest top left is on the second row
+
+    row_num = row_num + 1
+
+print("rows:", row_num)
+#number of rows
+
+print("cols:", cols)
+#number of columns
+
+if max(cols, len(row)) != min(cols, len(row)):
+    print("missing code on column:", min(cols, len(row)))
+    #detect missing code and state the column
 
 for n, c in enumerate(ordered, 1):
     print(n, c[2])
@@ -101,4 +122,3 @@ print("Found:", len(results))
 
 #if __name__ == "__main__":
 #anything inside this statement isn't passed through when imported
-
