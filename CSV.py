@@ -3,7 +3,7 @@ import pandas as pd
 
 import datetime
 
-from DM_Decode import ordered
+from DataMatrix_Decode import ordered
 #getting results variable from the file DM_Decode
 
 now = datetime.datetime.now()
