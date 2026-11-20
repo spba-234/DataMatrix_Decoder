@@ -1,11 +1,15 @@
 """
 SBS format Data-Matrix Decoder
 """
+from math import sqrt
+
 import cv2 as cv #image detection
 import zxingcpp #decoding
 from matplotlib import pyplot as plt #for comparing photos
 import numpy as np #math
 #Python Packages Installed
+
+#####################################################################
 
 img = cv.imread('testphotos/TESTIMAGE.jpg', cv.IMREAD_GRAYSCALE)
 #reads the image and applies grayscale
@@ -20,8 +24,9 @@ ret,threshold = cv.threshold(img,130,255,cv.THRESH_BINARY)
 #Apply binary threshold to make image either black or white
 #num1 is the cut-off, num2 makes the rest black
 
-#========================IGNORE==================================#
-#just plots picture for testing, remove once done to improve time
+######################################################################
+#Below just plots picture for testing
+#removable
 
 titles = ['Original Image', 'Edited Image']
 images = [img, threshold]
@@ -33,7 +38,8 @@ for i in range(2):
 
 plt.show()
 
-#===============================================================#
+########################################################################
+#makes the red boxes around the codes
 
 results = (zxingcpp.read_barcodes(
 threshold, formats = zxingcpp.BarcodeFormat.DataMatrix))
@@ -42,10 +48,22 @@ threshold, formats = zxingcpp.BarcodeFormat.DataMatrix))
 color = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
 #convert the grayscale image back to color to draw the red boxes
 
-#=============code location, numbering and boxing====================
+####################################################################################
+
+options = [6, 12, 24, 96, 384, 1536]
+ER = len(results)
+expected_result = min(options, key=lambda o: abs(o - ER))
+print(expected_result)
+#out of SBS formatted options round up to nearest
+
+###################################################################################
+#find position of each code
 
 codes = []
 #list to store (x, y, text) for each code
+
+coordinates = []
+#list to store just x and y
 
 for r in results:
 
@@ -65,57 +83,53 @@ for r in results:
     codes.append((cx, cy, r.text))
     #saves the position and text together
 
-GAP = 50
-#pixels. Codes within this much of the top code's y are in the same row
-
-ordered = []
-#new array for the ordered codes
-
-row_num = 0
-#for counting the amount of rows
-
-cols = 0
-#for counting number of columns
-
-while codes:
-    top = min(c[1] for c in codes)
-    #finds the top most y value
-
-    row = [c for c in codes if c[1] - top < GAP]
-    #find all the codes in that row
-
-    row.sort(key=lambda c: c[0])
-    #sorts list lowest x first
-
-    cols = max(cols, len(row))
-    #find the biggest row and count the codes in that row to get columns
-
-    ordered += row
-    #save to the new list
-
-    codes = [c for c in codes if c not in row]
-    #remove them from the old list
-    #so that when it loops the newest top left is on the second row
-
-    row_num = row_num + 1
-
-print("rows:", row_num)
-#number of rows
-
-print("cols:", cols)
-#number of columns
-
-if max(cols, len(row)) != min(cols, len(row)):
-    print("missing code on column:", min(cols, len(row)))
-    #detect missing code and state the column
-
-for n, c in enumerate(ordered, 1):
-    print(n, c[2])
-    #prints the ordered codes
-#==============================================================================
+    #coordinates.append((cx, cy))
+    #save just coordinates
 
 cv.imwrite("Found_Codes.png", color)
 #makes new file called "Found_Codes"
+
+###############################################################################
+#determine columns and rows and where missing values are
+
+#coordinate_list = (sorted(coordinates))
+#sorts coordinates array by smallest x first
+
+x = 0
+#counting variable for miny[x]
+
+rows = 0
+#counting columns
+
+for i in codes:
+    rows += 1
+    #add one to column count
+
+    miny = sorted(([i[1] for i in codes]))
+    #sort miny for smallest y coordinate first
+
+    if x >= len(miny):
+        break
+        #break if x is greater than miny list
+
+    gap = miny[x] + (len(results) / 2) + 50
+    #adjust as needed gap for what is in the same row
+
+    while x < len(miny) and miny[x] <= gap:
+        #loop while x is within range of miny
+
+        print("miny:", miny[x], "gap:", gap)
+        #print miny and gap
+
+        x+=1
+        #increase x
+
+    print("row:", rows)
+
+print("total rows:", rows - 1)
+print("total columns:", expected_result / (rows - 1))
+
+########################################################################
 
 print("Found:", len(results))
 #Counts the items in the list and returns the amount and saves as results
