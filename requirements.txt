@@ -1,0 +1,7 @@
+customtkinter
+matplotlib
+numpy
+opencv-python
+pandas
+tkinterdnd2
+zxing-cpp
